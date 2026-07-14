@@ -90,7 +90,7 @@ public class MyVpnService extends VpnService {
         builder.setBlocking(true);
 
         // Allow ourselves
-        builder.addDisallowedApplication(getPackageName());
+        try { builder.addDisallowedApplication(getPackageName()); } catch (Exception ignored) {}
 
         vpnInterface = builder.establish();
         if (vpnInterface == null) {
