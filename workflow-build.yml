@@ -23,7 +23,7 @@ jobs:
         with:
           gradle-version: 8.4
 
-      - name: Accept Android SDK licenses
+      - name: Accept SDK licenses
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Build Debug APK
