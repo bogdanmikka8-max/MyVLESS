@@ -4,9 +4,11 @@ import android.content.Intent;
 import android.net.VpnService;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.View;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -147,19 +149,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateStatus() {
-        txtStatus.setText(nodes.size() + " servers" + (isConnected ? " ● Connected" : " ○ Disconnected"));
+        String status = nodes.size() + " servers " + (isConnected ? "- Connected" : "- Disconnected");
+        txtStatus.setText(status);
         btnToggle.setText(isConnected ? R.string.connected : R.string.disconnected);
     }
 
     private void showUrlDialog() {
         String currentUrl = getPreferences(MODE_PRIVATE).getString("sub_url", "");
         String currentMirror = getPreferences(MODE_PRIVATE).getString("sub_mirror", "");
-        androidx.appcompat.app.AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Subscription URL");
-        builder.setView(R.layout.dialog_subscription);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_subscription, null);
+        builder.setView(dialogView);
+        EditText etUrl = dialogView.findViewById(R.id.et_sub_url);
+        EditText etMirror = dialogView.findViewById(R.id.et_sub_mirror);
+        etUrl.setText(currentUrl);
+        etMirror.setText(currentMirror);
         builder.setPositiveButton("Save", (dialog, which) -> {
-            // TODO: read text fields from the dialog layout
+            String url = etUrl.getText().toString().trim();
+            String mirror = etMirror.getText().toString().trim();
+            getPreferences(MODE_PRIVATE).edit()
+                .putString("sub_url", url)
+                .putString("sub_mirror", mirror)
+                .apply();
             Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show();
+            refreshNodes();
         });
         builder.setNegativeButton("Cancel", null);
         builder.show();
