@@ -1,25 +1,37 @@
 name: Build MyVLESS
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: JDK 17
+      - name: Java
         uses: actions/setup-java@v4
-        with: { java-version: 17, distribution: temurin }
+        with: {java-version: 17, distribution: temurin}
       - name: Android SDK
         run: |
-          mkdir -p ~/.android && touch ~/.android/repositories.cfg
-          curl -L https://github.com/termux/proot/raw/master/proot -o /tmp/proot && chmod +x /tmp/proot
-          yes | sdkmanager platforms\;android-34 build-tools\;34.0.0
-      - name: shim
+          mkdir -p /tmp/android/cmdline-tools
+          curl -sL -o tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          cd /tmp/android && unzip -q tools.zip && cd cmdline-tools && mv cmdline-tools latest
+          yes | /tmp/android/cmdline-tools/latest/bin/sdkmanager platforms\;android-34 build-tools\;34.0.0 2>&1 || true
+      - name: mipmap
         run: |
-          mkdir -p res app/src/main/res/mipmap-anydpi-v26 app/src/main/res/values app/pro-guard app/src/main/res/avatar
-          echo ' '> app/pro-guard
-          echo "test" > app/src/main/res/values/strings.xml
-      - name: build
-        run: gradle assembleRelease
-      - name: upload
+          mkdir -p app/src/main/res/values app/src/main/res/mipmap-anydpi-v26
+          for size in app/src/main/res/mipmap-; do for suff in hdpi mdpi xhdpi xxhdpi; do mkdir -p $size$suff; done; done
+          echo '<resources><color name="ic_launcher_background">#1B5E20</color></resources>' > app/src/main/res/values/colors.xml
+          echo '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/ic_launcher_background"/><foreground android:drawable="#FFFFFF"/></adaptive-icon>' > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          for size in hdpi mdpi xhdpi xxhdpi xxxhdpi; do cp app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml app/src/main/res/mipmap-$size/ic_launcher.xml 2>/dev/null; done
+          echo ' ' > app/proguard-rules.pro
+      - name: Install Gradle & Build
+        run: |
+          wget -q -O /tmp/gradle.zip https://services.gradle.org/distributions/gradle-8.4-bin.zip
+          sudo unzip -q /tmp/gradle.zip -d /opt/gradle
+          export PATH=/opt/gradle/gradle-8.4/bin:$PATH
+          export ANDROID_HOME=/opt/android-sdk
+          gradle assembleRelease --no-daemon
+      - name: Upload APK
         uses: actions/upload-artifact@v4
-        with: { name: MyVLESS-APK, path: app/build/outputs/apk/release/app-release-unsigned.apk }
+        with: {name: MyVLESS-APK, path: app/build/outputs/apk/release/app-release-unsigned.apk}
