@@ -5,7 +5,6 @@ import android.net.VpnService;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
@@ -22,7 +21,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView txtStatus;
     private ListView listNodes;
     private SwipeRefreshLayout swipeRefresh;
-    private ProgressBar progressBar;
 
     private List<Node> nodes = new ArrayList<>();
     private NodeListAdapter adapter;
@@ -38,8 +36,6 @@ public class MainActivity extends AppCompatActivity {
         txtStatus = findViewById(R.id.txt_status);
         listNodes = findViewById(R.id.list_nodes);
         swipeRefresh = findViewById(R.id.swipe_refresh);
-        progressBar = findViewById(android.R.id.empty); // placeholder
-
         subManager = new SubscriptionManager(this);
 
         adapter = new NodeListAdapter(this, nodes);
